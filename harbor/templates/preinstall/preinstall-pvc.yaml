@@ -1,0 +1,27 @@
+{{- $sharepvc := .Values.persistence.persistentVolumeClaim.sharepvc -}}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: harbor
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "0"
+  {{- if eq .Values.persistence.resourcePolicy "keep" }}
+    helm.sh/resource-policy: keep
+  {{- end }}
+  labels:
+{{ include "harbor.labels" . | indent 4 }}
+    component: harbor
+spec:
+  accessModes: 
+    - {{ $sharepvc.accessMode }}
+  resources:
+    requests:
+      storage: {{ $sharepvc.size }}
+  {{- if $sharepvc.storageClass }}
+    {{- if eq "-" $sharepvc.storageClass }}
+  storageClassName: ""
+    {{- else }}
+  storageClassName: {{ $sharepvc.storageClass }}
+    {{- end }}
+  {{- end }}

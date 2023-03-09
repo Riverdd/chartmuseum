@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: preinstall
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      name: preinstall
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        cloud-registry: master
+      containers:
+      - name: pre-install-job
+        image: "harbor.yovole.tech/cloud-registry/busybox:latest"
+        command: ["/bin/sh","-c"]
+        args:
+          - mkdir -m 777 -p /share/registry /share/chartmuseum /share/scandata /share/database /share/redis /share/trivy /share/trivy/trivy 
+        volumeMounts:
+          - name: share
+            mountPath: /share
+            readOnly: false
+      volumes:
+      - name: share
+        persistentVolumeClaim:
+          claimName: harbor
+  backoffLimit: 0
